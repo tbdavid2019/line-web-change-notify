@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple 整修機追蹤器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        apple: {
+                            gray: '#86868b',
+                            blue: '#007aff',
+                            green: '#30d158',
+                            red: '#ff453a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-6xl mx-auto px-4 py-3">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                <div class="flex items-center space-x-3 text-sm">
+                    <div class="flex items-center space-x-2">
+                        <div id="statusDot" class="w-3 h-3 bg-red-400 rounded-full flex-shrink-0"></div>
+                        <span id="statusText" class="text-gray-600">未追蹤</span>
+                    </div>
+                    <div class="text-gray-500">
+                        追蹤規則: <span id="rulesCount" class="font-medium">0</span>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="startBtn" class="px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-xs sm:text-sm font-medium transition-colors">
+                        🚀 開始追蹤
+                    </button>
+                    <button id="stopBtn" class="px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md text-xs sm:text-sm font-medium transition-colors hidden">
+                        ⏹️ 停止追蹤
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-6">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">🍎 Apple 整修機追蹤器</h1>
+            <p class="text-gray-600">輕鬆追蹤您想要的 Apple 整修機產品</p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+                <h2 class="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-gray-900">📋 追蹤規則設定</h2>
+                
+                <form id="ruleForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">規則名稱</label>
+                        <input type="text" id="ruleName" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base" 
+                               placeholder="例: 我想要的 MacBook Pro" required>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">產品類型</label>
+                            <select id="productType" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+                                <option value="">不限</option>
+                                <optgroup label="Mac">
+                                    <option value="MacBook Air">MacBook Air</option>
+                                    <option value="MacBook Pro">MacBook Pro</option>
+                                    <option value="Mac Studio">Mac Studio</option>
+                                    <option value="Mac mini">Mac mini</option>
+                                    <option value="iMac">iMac</option>
+                                </optgroup>
+                                <optgroup label="iPad">
+                                    <option value="iPad Pro">iPad Pro</option>
+                                    <option value="iPad Air">iPad Air</option>
+                                    <option value="iPad mini">iPad mini</option>
+                                    <option value="iPad">iPad</option>
+                                </optgroup>
+                                <optgroup label="其他">
+                                    <option value="Other">其他</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">晶片類型</label>
+                            <select id="chip" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+                                <option value="">不限</option>
+                                <option value="M2">M2</option>
+                                <option value="M3">M3</option>
+                                <option value="M4">M4</option>
+                                <option value="M4 Pro">M4 Pro</option>
+                                <option value="M4 Max">M4 Max</option>
+                                <option value="M4 Ultra">M4 Ultra</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">記憶體</label>
+                            <select id="minMemory" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+                                <option value="">不限</option>
+                                <option value="4">4GB</option>
+                                <option value="8">8GB</option>
+                                <option value="16">16GB</option>
+                                <option value="18">18GB</option>
+                                <option value="24">24GB</option>
+                                <option value="32">32GB</option>
+                                <option value="36">36GB</option>
+                                <option value="64">64GB</option>
+                                <option value="96">96GB</option>
+                                <option value="128">128GB</option>
+                                <option value="192">192GB</option>
+                                <option value="768">768GB</option>
+                                <option value="1500">1.5TB</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">顏色</label>
+                            <select id="color" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base">
+                                <option value="">不限</option>
+                                <option value="銀色">銀色</option>
+                                <option value="太空灰色">太空灰色</option>
+                                <option value="太空黑色">太空黑色</option>
+                                <option value="星光色">星光色</option>
+                                <option value="午夜色">午夜色</option>
+                                <option value="天藍色">天藍色</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">最高價格 (TWD)</label>
+                        <input type="number" id="maxPrice" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base" 
+                               placeholder="例: 50000" min="0" step="1000">
+                    </div>
+
+                    <button type="submit" class="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium transition-colors text-sm sm:text-base">
+                        ➕ 新增規則
+                    </button>
+                </form>
+
+                <div class="mt-6 sm:mt-8">
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">目前規則</h3>
+                    <div id="rulesList" class="space-y-3 max-h-64 sm:max-h-80 overflow-y-auto">
+                        <div class="text-center text-gray-500 py-6 sm:py-8">
+                            <div class="text-3xl sm:text-4xl mb-2">📝</div>
+                            <p class="text-sm sm:text-base">尚未設定追蹤規則</p>
+                            <p class="text-xs sm:text-sm mt-1">請填寫上方表單新增您的追蹤條件</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 摘要通知設定 -->
+                <div class="mt-6 sm:mt-8">
+                    <div class="border-t pt-6">
+                        <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-4">📱 摘要通知設定</h3>
+                        
+                        <!-- 每日摘要設定 -->
+                        <div class="space-y-4">
+                            <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0">
+                                <label class="flex items-center space-x-2 sm:w-1/2">
+                                    <input type="checkbox" id="dailySummaryEnabled" class="text-blue-600">
+                                    <span class="text-sm font-medium text-gray-700">每日產品摘要</span>
+                                    <span id="dailySummaryStatus" class="ml-2 px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600" style="display: none;"></span>
+                                </label>
+                                <div class="flex items-center space-x-2 sm:w-1/2">
+                                    <label class="text-sm text-gray-600">時間:</label>
+                                    <select id="dailySummaryTime" class="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500" disabled>
+                                        <option value="09:00">09:00</option>
+                                        <option value="12:00">12:00</option>
+                                        <option value="18:00">18:00</option>
+                                        <option value="21:00">21:00</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- 第一次通知時間提示 -->
+                            <div id="nextNotificationHint" class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg" style="display: none;">
+                                <p class="text-sm text-yellow-800">
+                                    <span class="font-medium">📅 下次通知時間:</span> <span id="nextNotificationTime"></span>
+                                </p>
+                            </div>
+                            
+                        </div>
+                        
+                        <!-- 說明文字 -->
+                        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                            <p class="text-sm text-blue-800">
+                                <span class="font-medium">📋 每日摘要:</span> 顯示當天新增的產品數量和熱門產品
+                            </p>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+                    <h2 class="text-lg sm:text-xl font-semibold text-gray-900">🔍 產品測試</h2>
+                    <div class="flex space-x-2 self-start sm:self-auto">
+                        <button id="testBtn" class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors">
+                            🧪 測試爬取
+                        </button>
+                        <button id="testSummaryBtn" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium transition-colors">
+                            📊 測試摘要
+                        </button>
+                    </div>
+                </div>
+                
+                <p class="text-gray-600 mb-4 text-sm sm:text-base">點擊「測試爬取」測試產品爬取功能，點擊「測試摘要」測試每日摘要通知</p>
+                
+                <div id="testResults" class="hidden">
+                    <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">測試結果</h3>
+                    <div id="productsList" class="space-y-3 sm:space-y-4 max-h-80 sm:max-h-96 overflow-y-auto">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="text-center mt-8 py-4 text-xs text-gray-400">
+            <div id="versionInfo">v1.0.2</div>
+            <div class="mt-2">
+                <a href="https://github.com/tbdavid2019/line-web-change-notify" target="_blank" rel="noopener noreferrer" 
+                   class="inline-flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    <span>GitHub</span>
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        class AppleTrackerUI {
+            constructor() {
+                this.config = { trackingRules: [] };
+                this.currentUser = null;
+                this.liffId = null;
+                this.isLiffReady = false;
+                this.productSpecs = {
+                    'MacBook Air': {
+                        chips: ['M2', 'M3', 'M4'],
+                        memory: [8, 16, 24, 32],
+                        colors: ['銀色', '太空灰色', '星光色', '午夜色']
+                    },
+                    'MacBook Pro': {
+                        chips: ['M2 Pro', 'M2 Max', 'M3', 'M3 Pro', 'M3 Max', 'M4', 'M4 Pro', 'M4 Max'],
+                        memory: [8, 16, 18, 24, 32, 36, 64, 128],
+                        colors: ['銀色', '太空灰色', '太空黑色']
+                    },
+                    'Mac Studio': {
+                        chips: ['M2 Max', 'M2 Ultra', 'M4 Max', 'M4 Ultra'],
+                        memory: [32, 64, 128, 192],
+                        colors: ['銀色']
+                    },
+                    'Mac mini': {
+                        chips: ['M2', 'M2 Pro', 'M4', 'M4 Pro'],
+                        memory: [8, 16, 24, 32, 64],
+                        colors: ['銀色']
+                    },
+                    'iPad': {
+                        chips: ['M2', 'M4'],
+                        memory: [8, 16, 32],
+                        colors: ['銀色', '太空灰色', '天藍色', '粉紅色']
+                    }
+                };
+                this.init();
+            }
+
+            async init() {
+                // 檢查是否從 LINE Login 回來
+                const urlParams = new URLSearchParams(window.location.search);
+                const userParam = urlParams.get('user');
+                
+                if (userParam) {
+                    try {
+                        this.currentUser = JSON.parse(decodeURIComponent(userParam));
+                        this.isLiffReady = true;
+                        await this.loadUserConfig();
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } catch (error) {
+                        console.error('解析用戶資訊失敗:', error);
+                    }
+                }
+
+                if (!this.currentUser) {
+                    await this.initLiff();
+                    if (this.isLiffReady && this.currentUser) {
+                        await this.loadUserConfig();
+                    } else {
+                        await this.checkLoginOptions();
+                        return;
+                    }
+                }
+                
+                this.bindEvents();
+                this.updateUI();
+                this.updateUserInfo();
+                this.loadVersion();
+                this.checkStatus();
+                this.checkDevConfig();
+                
+                setInterval(() => this.checkStatus(), 5 * 60 * 1000);
+            }
+
+            async checkLoginOptions() {
+                const [liffConfig, lineLoginConfig] = await Promise.all([
+                    fetch('/api/liff-config').then(r => r.json()),
+                    fetch('/api/line-login-config').then(r => r.json())
+                ]);
+
+                const isInLineApp = this.isInLineApp();
+
+                if (isInLineApp && liffConfig.liffId) {
+                    this.showLiffPrompt();
+                } else if (lineLoginConfig.channelId) {
+                    this.showLineLoginOption();
+                } else {
+                    this.showNoLoginConfig();
+                }
+            }
+
+            isInLineApp() {
+                const userAgent = navigator.userAgent.toLowerCase();
+                return userAgent.includes('line/');
+            }
+
+            showLiffPrompt() {
+                document.body.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
+                        <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 text-center">
+                            <div class="mb-6">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM10 17l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                    </svg>
+                                </div>
+                                <h1 class="text-2xl font-bold text-gray-900 mb-2">請透過 LINE 開啟</h1>
+                                <p class="text-gray-600 mb-6">
+                                    此網頁需要透過 LINE 開啟才能自動識別您的身份並管理個人追蹤規則。
+                                </p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="text-left bg-gray-50 rounded-lg p-4">
+                                    <h3 class="font-semibold text-gray-900 mb-2">📱 使用步驟：</h3>
+                                    <ol class="text-sm text-gray-700 space-y-1">
+                                        <li>1. 加 LINE Bot 為好友</li>
+                                        <li>2. 傳送「新增規則」指令</li>
+                                        <li>3. 點選 Bot 回覆的連結</li>
+                                        <li>4. 自動識別身份並設定規則</li>
+                                    </ol>
+                                </div>
+                                
+                                <button onclick="window.location.reload()" 
+                                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                                    🔄 重新載入
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            showLineLoginOption() {
+                document.body.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 flex items-center justify-center px-4">
+                        <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 text-center">
+                            <div class="mb-6">
+                                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM10 17l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                    </svg>
+                                </div>
+                                <h1 class="text-2xl font-bold text-gray-900 mb-2">🍎 Apple 整修機追蹤器</h1>
+                                <p class="text-gray-600 mb-6">
+                                    請透過 LINE 登入以設定您的個人追蹤規則
+                                </p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="text-left bg-gray-50 rounded-lg p-4">
+                                    <h3 class="font-semibold text-gray-900 mb-2">✨ 功能特色：</h3>
+                                    <ul class="text-sm text-gray-700 space-y-1">
+                                        <li>• 自動追蹤 Apple 整修機產品</li>
+                                        <li>• 個人化的追蹤條件設定</li>
+                                        <li>• LINE 即時通知新產品</li>
+                                        <li>• 價格、規格條件篩選</li>
+                                        <li>• 可自訂時間的摘要通知</li>
+                                    </ul>
+                                </div>
+                                
+                                <a href="/auth/line" 
+                                   class="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-4 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 block no-underline">
+                                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.629 0 .344-.281.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/>
+                                    </svg>
+                                    <span>透過 LINE 登入</span>
+                                </a>
+                                
+                                <p class="text-xs text-gray-500">
+                                    登入後即可設定個人追蹤規則並接收通知
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            showNoLoginConfig() {
+                document.body.innerHTML = `
+                    <div class="min-h-screen bg-gradient-to-br from-red-50 to-orange-100 flex items-center justify-center px-4">
+                        <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-6 text-center">
+                            <div class="mb-6">
+                                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg class="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM13 17h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                                    </svg>
+                                </div>
+                                <h1 class="text-2xl font-bold text-gray-900 mb-2">配置未完成</h1>
+                                <p class="text-gray-600 mb-6">
+                                    系統尚未配置 LINE 登入功能，請聯絡管理員設定相關參數。
+                                </p>
+                            </div>
+                            
+                            <button onclick="window.location.reload()" 
+                                    class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                                🔄 重新載入
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            async initLiff() {
+                try {
+                    const response = await fetch('/api/liff-config');
+                    const liffConfig = await response.json();
+                    
+                    if (!liffConfig.liffId) {
+                            return;
+                    }
+
+                    await liff.init({ liffId: liffConfig.liffId });
+                    
+                    if (liff.isLoggedIn()) {
+                        const profile = await liff.getProfile();
+                        this.currentUser = {
+                            userId: profile.userId,
+                            displayName: profile.displayName,
+                            pictureUrl: profile.pictureUrl
+                        };
+                        this.isLiffReady = true;
+                        this.updateUserInfo();
+                    } else {
+                    }
+                } catch (error) {
+                    console.error('LIFF 初始化失敗:', error);
+                }
+            }
+
+            bindEvents() {
+                document.getElementById('ruleForm').addEventListener('submit', (e) => this.addRule(e));
+                document.getElementById('startBtn').addEventListener('click', () => this.startTracking());
+                document.getElementById('stopBtn').addEventListener('click', () => this.stopTracking());
+                document.getElementById('testBtn').addEventListener('click', () => this.testProducts());
+                document.getElementById('testSummaryBtn').addEventListener('click', () => this.testSummary());
+                document.getElementById('productType').addEventListener('change', (e) => this.updateProductOptions(e.target.value));
+                
+                // 摘要通知設定事件
+                document.getElementById('dailySummaryEnabled').addEventListener('change', (e) => this.toggleSummarySettings('daily', e.target.checked));
+                document.getElementById('dailySummaryTime').addEventListener('change', () => {
+                    this.updateSummaryStatus();
+                    this.saveSummarySettings();
+                });
+            }
+
+            async loadConfig() {
+                this.config = { trackingRules: [] };
+            }
+
+            async loadUserConfig() {
+                try {
+                    const response = await fetch(`/api/users/${this.currentUser.userId}/config`);
+                    this.config = await response.json();
+                    this.updateSummaryUI();
+                } catch (error) {
+                    console.error('載入用戶配置失敗:', error);
+                    this.config = { trackingRules: [] };
+                }
+            }
+
+            updateSummaryUI() {
+                const summarySettings = this.config.summarySettings || {};
+                
+                // 更新每日摘要設定
+                const dailyEnabled = document.getElementById('dailySummaryEnabled');
+                const dailyTime = document.getElementById('dailySummaryTime');
+                
+                if (dailyEnabled && dailyTime) {
+                    dailyEnabled.checked = summarySettings.dailySummary?.enabled || false;
+                    dailyTime.disabled = !dailyEnabled.checked;
+                    dailyTime.value = summarySettings.dailySummary?.time || '09:00';
+                }
+                
+                this.updateSummaryStatus();
+            }
+
+            updateSummaryStatus() {
+                const statusElement = document.getElementById('dailySummaryStatus');
+                const dailyEnabled = document.getElementById('dailySummaryEnabled');
+                const dailyTime = document.getElementById('dailySummaryTime');
+                const hintElement = document.getElementById('nextNotificationHint');
+                const nextTimeElement = document.getElementById('nextNotificationTime');
+                
+                if (statusElement && dailyEnabled) {
+                    if (dailyEnabled.checked) {
+                        statusElement.textContent = `已啟用 (${dailyTime.value})`;
+                        statusElement.className = 'ml-2 px-2 py-1 text-xs rounded-full bg-green-100 text-green-700';
+                        statusElement.style.display = 'inline-block';
+                        
+                        // 顯示下次通知時間提示
+                        const nextNotificationTime = this.calculateNextNotificationTime(dailyTime.value);
+                        if (nextTimeElement && hintElement) {
+                            nextTimeElement.textContent = nextNotificationTime;
+                            hintElement.style.display = 'block';
+                        }
+                    } else {
+                        statusElement.textContent = '未啟用';
+                        statusElement.className = 'ml-2 px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-600';
+                        statusElement.style.display = 'inline-block';
+                        
+                        // 隱藏提示
+                        if (hintElement) {
+                            hintElement.style.display = 'none';
+                        }
+                    }
+                }
+            }
+
+            calculateNextNotificationTime(timeString) {
+                const now = new Date();
+                const [hours, minutes] = timeString.split(':').map(Number);
+                
+                // 計算今天的通知時間
+                const todayNotification = new Date(now);
+                todayNotification.setHours(hours, 0, 0, 0);
+                
+                let nextNotification;
+                
+                // 如果今天的通知時間還沒到，就是今天；否則是明天
+                if (now < todayNotification) {
+                    nextNotification = todayNotification;
+                } else {
+                    nextNotification = new Date(todayNotification);
+                    nextNotification.setDate(nextNotification.getDate() + 1);
+                }
+                
+                const options = { 
+                    month: 'numeric', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false
+                };
+                
+                return nextNotification.toLocaleString('zh-TW', options);
+            }
+
+            showSuccessMessage(message) {
+                const successDiv = document.createElement('div');
+                successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                successDiv.textContent = '✅ ' + message;
+                document.body.appendChild(successDiv);
+                
+                setTimeout(() => {
+                    if (document.body.contains(successDiv)) {
+                        document.body.removeChild(successDiv);
+                    }
+                }, 3000);
+            }
+
+            toggleSummarySettings(type, enabled) {
+                if (type === 'daily') {
+                    document.getElementById('dailySummaryTime').disabled = !enabled;
+                }
+                this.updateSummaryStatus();
+                this.saveSummarySettings();
+            }
+
+            async saveSummarySettings() {
+                try {
+                    if (!this.isLiffReady || !this.currentUser) {
+                        return;
+                    }
+
+                    // 確保 config 有 summarySettings 屬性
+                    if (!this.config.summarySettings) {
+                        this.config.summarySettings = {};
+                    }
+
+                    // 收集設定值
+                    const dailyEnabled = document.getElementById('dailySummaryEnabled').checked;
+                    const dailyTime = document.getElementById('dailySummaryTime').value;
+
+                    this.config.summarySettings = {
+                        dailySummary: {
+                            enabled: dailyEnabled,
+                            time: dailyTime
+                        }
+                    };
+
+                    await this.saveConfig();
+                } catch (error) {
+                    console.error('儲存摘要設定失敗:', error);
+                }
+            }
+
+            async saveConfig() {
+                try {
+                    if (!this.isLiffReady || !this.currentUser) {
+                        throw new Error('請透過 LINE 登入後再設定規則');
+                    }
+                    
+                    const apiUrl = `/api/users/${this.currentUser.userId}/config`;
+                        
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.config)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const result = await response.json();
+                    this.showSuccessMessage('設定已儲存');
+                    this.updateSummaryStatus();
+                } catch (error) {
+                    console.error('儲存配置失敗:', error);
+                    alert('儲存配置失敗: ' + error.message);
+                }
+            }
+
+            updateUserInfo() {
+                if (!this.currentUser) return;
+                
+                const existingUserInfo = document.querySelector('.user-info');
+                if (existingUserInfo) return;
+                
+                const statusBar = document.querySelector('.bg-white.shadow-sm.border-b .max-w-6xl > div');
+                if (statusBar) {
+                    const userInfo = document.createElement('div');
+                    userInfo.className = 'flex items-center space-x-2 text-sm user-info';
+                    userInfo.innerHTML = `
+                        <img src="${this.currentUser.pictureUrl}" alt="用戶頭像" class="w-6 h-6 rounded-full">
+                        <span class="text-gray-600">歡迎，${this.currentUser.displayName}</span>
+                    `;
+                    statusBar.appendChild(userInfo);
+                }
+            }
+
+            async loadVersion() {
+                try {
+                    const response = await fetch('/api/version');
+                    const versionData = await response.json();
+                    document.getElementById('versionInfo').textContent = `v${versionData.version}`;
+                } catch (error) {
+                    console.error('載入版本資訊失敗:', error);
+                }
+            }
+
+            async checkDevConfig() {
+                try {
+                    const response = await fetch('/api/dev-config');
+                    const devConfig = await response.json();
+                    
+                    // 根據環境配置控制測試按鈕顯示
+                    const testSummaryBtn = document.getElementById('testSummaryBtn');
+                    if (testSummaryBtn) {
+                        if (devConfig.showTestFeatures) {
+                            testSummaryBtn.style.display = 'inline-block';
+                        } else {
+                            testSummaryBtn.style.display = 'none';
+                        }
+                    }
+                    
+                    // 更新說明文字
+                    const descriptionElement = document.querySelector('.text-gray-600.mb-4');
+                    if (descriptionElement && devConfig.showTestFeatures) {
+                        descriptionElement.textContent = '點擊「測試爬取」測試產品爬取功能，點擊「測試摘要」測試每日摘要通知';
+                    } else if (descriptionElement) {
+                        descriptionElement.textContent = '點擊按鈕測試產品爬取功能，查看目前可用的整修機產品';
+                    }
+                } catch (error) {
+                    console.error('載入開發環境配置失敗:', error);
+                    // 錯誤時隱藏測試按鈕
+                    const testSummaryBtn = document.getElementById('testSummaryBtn');
+                    if (testSummaryBtn) {
+                        testSummaryBtn.style.display = 'none';
+                    }
+                }
+            }
+
+            async checkStatus() {
+                try {
+                    const response = await fetch('/api/track/status');
+                    const status = await response.json();
+                    
+                    const statusDot = document.getElementById('statusDot');
+                    const statusText = document.getElementById('statusText');
+                    
+                    if (status.isTracking) {
+                        statusDot.className = 'w-3 h-3 bg-green-400 rounded-full animate-pulse';
+                        statusText.textContent = status.autoRestarted ? '追蹤中 (自動重啟)' : '追蹤中';
+                        document.getElementById('startBtn').classList.add('hidden');
+                        document.getElementById('stopBtn').classList.remove('hidden');
+                    } else {
+                        statusDot.className = 'w-3 h-3 bg-red-400 rounded-full';
+                        statusText.textContent = '未追蹤';
+                        document.getElementById('startBtn').classList.remove('hidden');
+                        document.getElementById('stopBtn').classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('檢查狀態失敗:', error);
+                }
+            }
+
+            async addRule(e) {
+                e.preventDefault();
+                
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const originalText = submitBtn.textContent;
+                
+                try {
+                    // 設置loading狀態
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = '🔄 新增中...';
+                    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                    
+                    if (!this.config.trackingRules) {
+                        this.config.trackingRules = [];
+                    }
+                    
+                    const ruleName = document.getElementById('ruleName').value.trim();
+                    if (!ruleName) {
+                        alert('請輸入規則名稱');
+                        return;
+                    }
+                    
+                    const ruleId = 'rule_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    
+                    const rule = {
+                        id: ruleId,
+                        name: ruleName,
+                        enabled: true,
+                        filters: {
+                            productType: document.getElementById('productType').value || undefined,
+                            chip: document.getElementById('chip').value || undefined,
+                            minMemory: document.getElementById('minMemory').value ? parseInt(document.getElementById('minMemory').value) : undefined,
+                            color: document.getElementById('color').value || undefined,
+                            maxPrice: document.getElementById('maxPrice').value ? parseInt(document.getElementById('maxPrice').value) : undefined
+                        }
+                    };
+
+                    Object.keys(rule.filters).forEach(key => {
+                        if (rule.filters[key] === undefined) {
+                            delete rule.filters[key];
+                        }
+                    });
+
+                    
+                    this.config.trackingRules.push(rule);
+                    await this.saveConfig();
+                    this.updateUI();
+                    
+                    document.getElementById('ruleForm').reset();
+                    alert('規則新增成功！');
+                } catch (error) {
+                    console.error('新增規則失敗:', error);
+                    alert('新增規則失敗: ' + error.message);
+                } finally {
+                    // 恢復按鈕狀態
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                    submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                }
+            }
+
+            async deleteRule(ruleId, buttonElement = null) {
+                if (!this.isLiffReady || !this.currentUser) {
+                    alert('請透過 LINE 登入後再刪除規則');
+                    return;
+                }
+
+                // 設置loading狀態
+                let originalText = '';
+                if (buttonElement) {
+                    originalText = buttonElement.textContent;
+                    buttonElement.disabled = true;
+                    buttonElement.textContent = '🔄 刪除中...';
+                    buttonElement.classList.add('opacity-75', 'cursor-not-allowed');
+                }
+
+                try {
+                    const response = await fetch(`/api/users/${this.currentUser.userId}/rules/${ruleId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+
+                    this.config.trackingRules = this.config.trackingRules.filter(rule => rule.id !== ruleId);
+                    this.updateUI();
+                    
+                    alert('規則已成功刪除！');
+                } catch (error) {
+                    console.error('刪除規則失敗:', error);
+                    alert('刪除規則失敗: ' + error.message);
+                }
+            }
+
+            async toggleRule(ruleId) {
+                const rule = this.config.trackingRules.find(r => r.id === ruleId);
+                if (rule) {
+                    rule.enabled = !rule.enabled;
+                    await this.saveConfig();
+                    this.updateUI();
+                } else {
+                    console.error('未找到要切換的規則:', ruleId);
+                }
+            }
+
+            updateUI() {
+                document.getElementById('rulesCount').textContent = this.config.trackingRules.length;
+                this.updateRulesList();
+            }
+
+            updateRulesList() {
+                const container = document.getElementById('rulesList');
+                
+                if (this.config.trackingRules.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <div class="text-4xl mb-2">📝</div>
+                            <p>尚未設定追蹤規則</p>
+                            <p class="text-sm">請填寫上方表單新增您的追蹤條件</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = this.config.trackingRules.map(rule => `
+                    <div class="p-4 border rounded-lg ${rule.enabled ? 'border-blue-200 bg-blue-50' : 'border-gray-200 bg-gray-50'}" data-rule-id="${rule.id}">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 space-y-2 sm:space-y-0">
+                            <h4 class="font-medium text-gray-900">${rule.name}</h4>
+                            <div class="flex space-x-2 flex-shrink-0">
+                                <button class="toggle-rule-btn px-3 py-1 text-xs rounded transition-colors ${rule.enabled ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}" 
+                                        data-rule-id="${rule.id}">
+                                    ${rule.enabled ? '停用' : '啟用'}
+                                </button>
+                                <button class="delete-rule-btn px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                                        data-rule-id="${rule.id}">
+                                    刪除
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 break-words">${this.formatFilters(rule.filters)}</p>
+                    </div>
+                `).join('');
+                
+                setTimeout(() => {
+                    
+                    const toggleBtns = container.querySelectorAll('.toggle-rule-btn');
+                    toggleBtns.forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            const target = e.currentTarget;
+                            const ruleId = target.getAttribute('data-rule-id');
+                            
+                            if (ruleId) {
+                                await this.toggleRule(ruleId);
+                            } else {
+                                console.error('無法獲取 rule-id');
+                            }
+                        });
+                    });
+                    
+                    const deleteBtns = container.querySelectorAll('.delete-rule-btn');
+                    deleteBtns.forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            const target = e.currentTarget;
+                            const ruleId = target.getAttribute('data-rule-id');
+                            
+                            if (ruleId) {
+                                if (confirm('確定要刪除這個追蹤規則嗎？')) {
+                                    this.deleteRule(ruleId, target);
+                                }
+                            } else {
+                                console.error('無法獲取 rule-id');
+                            }
+                        });
+                    });
+                }, 0);
+            }
+
+            formatFilters(filters) {
+                const conditions = [];
+                if (filters.productType) conditions.push(`產品: ${filters.productType}`);
+                if (filters.chip) conditions.push(`晶片: ${filters.chip}`);
+                if (filters.minMemory) conditions.push(`記憶體: ≥${filters.minMemory}GB`);
+                if (filters.color) conditions.push(`顏色: ${filters.color}`);
+                if (filters.maxPrice) conditions.push(`價格: ≤NT$${filters.maxPrice.toLocaleString()}`);
+                
+                return conditions.length > 0 ? conditions.join(' | ') : '無限制';
+            }
+
+            updateProductOptions(productType) {
+                const chipSelect = document.getElementById('chip');
+                const memorySelect = document.getElementById('minMemory');
+                const colorSelect = document.getElementById('color');
+
+                chipSelect.innerHTML = '<option value="">不限</option>';
+                memorySelect.innerHTML = '<option value="">不限</option>';
+                colorSelect.innerHTML = '<option value="">不限</option>';
+
+                // 如果產品類型是「其他」，禁用晶片、記憶體、顏色選項
+                if (productType === 'Other') {
+                    chipSelect.disabled = true;
+                    memorySelect.disabled = true;
+                    colorSelect.disabled = true;
+                    chipSelect.value = '';
+                    memorySelect.value = '';
+                    colorSelect.value = '';
+                    return;
+                }
+
+                // 重新啟用選項（如果之前被禁用）
+                chipSelect.disabled = false;
+                memorySelect.disabled = false;
+                colorSelect.disabled = false;
+
+                if (!productType || !this.productSpecs[productType]) {
+                    ['M2', 'M2 Pro', 'M2 Max', 'M3', 'M3 Pro', 'M3 Max', 'M4', 'M4 Pro', 'M4 Max', 'M4 Ultra'].forEach(chip => {
+                        chipSelect.innerHTML += `<option value="${chip}">${chip}</option>`;
+                    });
+                    [8, 16, 24, 32, 36, 64, 128, 192].forEach(memory => {
+                        memorySelect.innerHTML += `<option value="${memory}">${memory}GB</option>`;
+                    });
+                    ['銀色', '太空灰色', '太空黑色', '星光色', '午夜色', '天藍色', '粉紅色'].forEach(color => {
+                        colorSelect.innerHTML += `<option value="${color}">${color}</option>`;
+                    });
+                    return;
+                }
+
+                const specs = this.productSpecs[productType];
+
+                specs.chips.forEach(chip => {
+                    chipSelect.innerHTML += `<option value="${chip}">${chip}</option>`;
+                });
+
+                specs.memory.forEach(memory => {
+                    memorySelect.innerHTML += `<option value="${memory}">${memory}GB</option>`;
+                });
+
+                specs.colors.forEach(color => {
+                    colorSelect.innerHTML += `<option value="${color}">${color}</option>`;
+                });
+            }
+
+            async startTracking() {
+                const btn = document.getElementById('startBtn');
+                const originalText = btn.textContent;
+                
+                try {
+                    btn.disabled = true;
+                    btn.textContent = '🔄 啟動中...';
+                    btn.classList.add('opacity-75', 'cursor-not-allowed');
+                    
+                    const response = await fetch('/api/track/start', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.checkStatus();
+                    } else {
+                        alert(result.error || '啟動失敗');
+                    }
+                } catch (error) {
+                    console.error('啟動追蹤失敗:', error);
+                    alert('啟動追蹤失敗');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                }
+            }
+
+            async stopTracking() {
+                const btn = document.getElementById('stopBtn');
+                const originalText = btn.textContent;
+                
+                try {
+                    btn.disabled = true;
+                    btn.textContent = '🔄 停止中...';
+                    btn.classList.add('opacity-75', 'cursor-not-allowed');
+                    
+                    const response = await fetch('/api/track/stop', { method: 'POST' });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        this.checkStatus();
+                    }
+                } catch (error) {
+                    console.error('停止追蹤失敗:', error);
+                    alert('停止追蹤失敗');
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                }
+            }
+
+            async testProducts() {
+                const btn = document.getElementById('testBtn');
+                const resultsDiv = document.getElementById('testResults');
+                const productsDiv = document.getElementById('productsList');
+                
+                btn.disabled = true;
+                btn.textContent = '🔄 測試中...';
+                
+                resultsDiv.classList.remove('hidden');
+                productsDiv.innerHTML = '<div class="text-center py-8 text-gray-500">正在爬取產品資料，請稍候...</div>';
+                
+                try {
+                    const response = await fetch('/api/products/test');
+                    const result = await response.json();
+                    
+                    if (result.error) {
+                        productsDiv.innerHTML = `<div class="text-center py-8 text-red-500">測試失敗: ${result.error}</div>`;
+                        return;
+                    }
+                    
+                    let htmlContent = `
+                        <div class="mb-4 p-4 bg-blue-50 rounded-lg">
+                            <h4 class="font-medium text-blue-900">${result.message}</h4>
+                        </div>
+                    `;
+                    
+                    if (result.ruleResults && result.ruleResults.length > 0) {
+                        htmlContent += '<div class="mb-6">';
+                        htmlContent += '<h4 class="font-medium text-gray-900 mb-3">各規則匹配結果:</h4>';
+                        
+                        result.ruleResults.forEach(ruleResult => {
+                            const matchText = ruleResult.matchCount > 0 ? 
+                                `✅ 找到 ${ruleResult.matchCount} 個匹配產品` : 
+                                '❌ 沒有匹配的產品';
+                            
+                            htmlContent += `
+                                <div class="mb-3 p-3 border rounded-lg ${ruleResult.matchCount > 0 ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'}">
+                                    <div class="font-medium">${ruleResult.ruleName}</div>
+                                    <div class="text-sm text-gray-600">${matchText}</div>
+                                </div>
+                            `;
+                        });
+                        htmlContent += '</div>';
+                    }
+                    
+                    const products = result.products || result.summary || [];
+                    if (products.length === 0) {
+                        htmlContent += '<div class="text-center py-8 text-gray-500">沒有找到符合條件的產品</div>';
+                    } else {
+                        htmlContent += '<h4 class="font-medium text-gray-900 mb-3">產品列表:</h4>';
+                        htmlContent += products.map(product => `
+                            <div class="flex flex-col sm:flex-row p-3 sm:p-4 border rounded-lg bg-gray-50 space-y-3 sm:space-y-0 mb-3">
+                                <img src="${product.image || ''}" alt="${product.name}" 
+                                     class="w-full h-32 sm:w-16 sm:h-16 rounded object-cover sm:mr-4 bg-gray-200 flex-shrink-0" 
+                                     onerror="this.style.display='none'">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-medium text-gray-900 mb-1 text-sm sm:text-base break-words">
+                                        ${product.url ? `<a href="${product.url}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline">${product.name}</a>` : product.name}
+                                    </h4>
+                                    <p class="text-base sm:text-lg font-semibold text-green-600 mb-1">${product.price || '價格未知'}</p>
+                                    <p class="text-xs sm:text-sm text-gray-600 break-words">${this.formatSpecs(product.specs)}</p>
+                                    ${product.url ? '<p class="text-xs text-blue-500 mt-1">🔗 點擊產品名稱查看詳情</p>' : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    productsDiv.innerHTML = htmlContent;
+                    
+                } catch (error) {
+                    console.error('測試失敗:', error);
+                    productsDiv.innerHTML = '<div class="text-center py-8 text-red-500">測試失敗，請檢查網路連線</div>';
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '🧪 測試爬取';
+                }
+            }
+
+            async testSummary() {
+                const btn = document.getElementById('testSummaryBtn');
+                const resultsDiv = document.getElementById('testResults');
+                const productsDiv = document.getElementById('productsList');
+                
+                if (!this.isLiffReady || !this.currentUser) {
+                    alert('請透過 LINE 登入後再測試摘要功能');
+                    return;
+                }
+                
+                btn.disabled = true;
+                btn.textContent = '🔄 測試中...';
+                
+                resultsDiv.classList.remove('hidden');
+                productsDiv.innerHTML = '<div class="text-center py-8 text-gray-500">正在產生摘要通知，請稍候...</div>';
+                
+                try {
+                    const response = await fetch(`/api/users/${this.currentUser.userId}/test-summary`, {
+                        method: 'POST'
+                    });
+                    const result = await response.json();
+                    
+                    if (result.error) {
+                        productsDiv.innerHTML = `<div class="text-center py-8 text-red-500">測試失敗: ${result.error}</div>`;
+                        return;
+                    }
+                    
+                    let htmlContent = `
+                        <div class="mb-4 p-4 bg-green-50 rounded-lg">
+                            <h4 class="font-medium text-green-900">✅ ${result.message}</h4>
+                        </div>
+                    `;
+                    
+                    if (result.summary) {
+                        htmlContent += `
+                            <div class="mb-4 p-4 border rounded-lg bg-blue-50">
+                                <h4 class="font-medium text-blue-900 mb-2">📋 摘要內容:</h4>
+                                <div class="text-sm text-blue-800 whitespace-pre-line">${result.summary}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (result.products && result.products.length > 0) {
+                        htmlContent += '<h4 class="font-medium text-gray-900 mb-3">今日新產品:</h4>';
+                        htmlContent += result.products.map(product => `
+                            <div class="flex flex-col sm:flex-row p-3 sm:p-4 border rounded-lg bg-gray-50 space-y-3 sm:space-y-0 mb-3">
+                                <img src="${product.image || ''}" alt="${product.name}" 
+                                     class="w-full h-32 sm:w-16 sm:h-16 rounded object-cover sm:mr-4 bg-gray-200 flex-shrink-0" 
+                                     onerror="this.style.display='none'">
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-medium text-gray-900 mb-1 text-sm sm:text-base break-words">
+                                        ${product.url ? `<a href="${product.url}" target="_blank" class="text-blue-600 hover:text-blue-800 hover:underline">${product.name}</a>` : product.name}
+                                    </h4>
+                                    <p class="text-base sm:text-lg font-semibold text-green-600 mb-1">${product.price || '價格未知'}</p>
+                                    <p class="text-xs sm:text-sm text-gray-600 break-words">${this.formatSpecs(product.specs)}</p>
+                                    ${product.url ? '<p class="text-xs text-blue-500 mt-1">🔗 點擊產品名稱查看詳情</p>' : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    productsDiv.innerHTML = htmlContent;
+                    
+                } catch (error) {
+                    console.error('測試摘要失敗:', error);
+                    productsDiv.innerHTML = '<div class="text-center py-8 text-red-500">測試摘要失敗，請檢查網路連線</div>';
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = '📊 測試摘要';
+                }
+            }
+
+            formatSpecs(specs) {
+                const specParts = [];
+                if (specs.productType) specParts.push(specs.productType);
+                if (specs.chip) specParts.push(specs.chip);
+                if (specs.memory) specParts.push(specs.memory);
+                if (specs.storage) specParts.push(specs.storage);
+                if (specs.color) specParts.push(specs.color);
+                
+                return specParts.join(' | ') || '規格未知';
+            }
+
+        }
+
+        const app = new AppleTrackerUI();
+    </script>
+</body>
+</html>

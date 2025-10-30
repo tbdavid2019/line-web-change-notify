@@ -1,0 +1,71 @@
+{
+  "lineConfig": {
+    "channelAccessToken": "YOUR_CHANNEL_ACCESS_TOKEN",
+    "channelSecret": "YOUR_CHANNEL_SECRET"
+  },
+  "emailConfig": {
+    "enabled": false,
+    "smtp": {
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "secure": false
+    },
+    "auth": {
+      "user": "your-email@gmail.com",
+      "pass": "your-app-password"
+    }
+  },
+  "schedule": {
+    "enabled": false,
+    "intervalMinutes": 30,
+    "quietHours": {
+      "start": "22:00",
+      "end": "08:00"
+    }
+  },
+  "scrapers": {
+    "apple": {
+      "enabled": true,
+      "categories": ["mac", "ipad", "appletv"],
+      "maxRetries": 3,
+      "retryDelay": 5000,
+      "interval": 60
+    },
+    "pchome": {
+      "enabled": false,
+      "categories": ["mac", "ipad"],
+      "maxRetries": 3,
+      "retryDelay": 3000,
+      "interval": 30
+    },
+    "momo": {
+      "enabled": false,
+      "categories": ["mac", "ipad"],
+      "maxRetries": 3,
+      "retryDelay": 3000,
+      "interval": 20
+    },
+    "shopee": {
+      "enabled": false,
+      "categories": ["mac", "ipad"],
+      "maxRetries": 2,
+      "retryDelay": 2000,
+      "interval": 15
+    }
+  },
+  "filters": {
+    "apple": {
+      "productType": null,
+      "chip": null,
+      "minMemory": null,
+      "minStorage": null,
+      "color": null,
+      "maxPrice": null
+    },
+    "global": {
+      "excludeKeywords": ["refurbished demo", "展示機"],
+      "minPrice": 1000,
+      "maxPrice": 200000
+    }
+  }
+}

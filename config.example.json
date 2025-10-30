@@ -1,0 +1,26 @@
+{
+  "lineConfig": {
+    "channelAccessToken": "YOUR_CHANNEL_ACCESS_TOKEN",
+    "channelSecret": "YOUR_CHANNEL_SECRET"
+  },
+  "emailConfig": {
+    "enabled": false,
+    "smtp": {
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "secure": false
+    },
+    "auth": {
+      "user": "your-email@gmail.com",
+      "pass": "your-app-password"
+    }
+  },
+  "schedule": {
+    "enabled": false,
+    "intervalMinutes": 30,
+    "quietHours": {
+      "start": "22:00",
+      "end": "08:00"
+    }
+  }
+}
