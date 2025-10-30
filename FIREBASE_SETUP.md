@@ -4,7 +4,7 @@
 
 1. 前往 [Firebase Console](https://console.firebase.google.com/)
 2. 點選「建立專案」
-3. 輸入專案名稱（例如：apple-refurbished-tracker）
+3. 輸入專案名稱（例如：line-web-change-notify ）
 4. 選擇是否啟用 Google Analytics
 5. 建立專案
 

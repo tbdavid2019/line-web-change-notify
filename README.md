@@ -63,7 +63,7 @@ WEB_URL=https://你的網域
 
 ### 4. 設定 LINE Bot（必要）
 
-詳細步驟請參考 `LINE_SETUP.md`：
+詳細步驟請參考 [LINE_SETUP.md](LINE_SETUP.md)：
 
 1. 建立 LINE Messaging API Channel
 2. 建立 LINE Login Channel
@@ -72,7 +72,7 @@ WEB_URL=https://你的網域
 
 ### 5. 設定 Firebase（選用）
 
-詳細步驟請參考 `FIREBASE_SETUP.md`：
+詳細步驟請參考 [FIREBASE_SETUP.md](FIREBASE_SETUP.md)：
 
 1. 建立 Firebase 專案
 2. 設定 Firestore Database
