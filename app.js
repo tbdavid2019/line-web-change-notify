@@ -13,6 +13,7 @@ class AppleTracker {
     this.app = express();
     this.port = process.env.PORT || 3000;
     this.browser = null;
+    this.browserInitPromise = null;
     this.config = { lineConfig: {} };
     this.isTracking = false;
     this.trackingInterval = null;
@@ -429,14 +430,6 @@ class AppleTracker {
         email: this.config.emailConfig || { enabled: false },
       });
 
-      if (!this.browser) {
-        this.browser = await puppeteer.launch({
-          headless: true,
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
-          protocolTimeout: 120000, // 2 minutes timeout
-        });
-      }
-
       if (!this.scraperManager) {
         this.scraperManager = new ScraperManager({
           browser: this.browser,
@@ -491,6 +484,39 @@ class AppleTracker {
         channelSecret: process.env.LINE_CHANNEL_SECRET || "",
       },
     };
+  }
+
+  async ensureBrowser() {
+    if (this.browser) {
+      return this.browser;
+    }
+
+    if (this.browserInitPromise) {
+      return this.browserInitPromise;
+    }
+
+    console.log("🧠 初始化瀏覽器實例...");
+    this.browserInitPromise = puppeteer
+      .launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        protocolTimeout: 120000, // 2 minutes timeout
+      })
+      .then((browser) => {
+        this.browser = browser;
+        if (this.scraperManager) {
+          this.scraperManager.setBrowser(browser);
+        }
+        console.log("✅ 瀏覽器初始化完成");
+        return browser;
+      })
+      .catch((error) => {
+        this.browserInitPromise = null;
+        console.error("❌ 瀏覽器初始化失敗:", error);
+        throw error;
+      });
+
+    return this.browserInitPromise;
   }
 
   async detectNewProducts(currentProducts) {
@@ -892,6 +918,8 @@ class AppleTracker {
   }
 
   async scrapeProducts() {
+    await this.ensureBrowser();
+
     if (!this.scraperManager) {
       console.error("❌ 爬蟲管理器未初始化");
       return [];
@@ -1441,6 +1469,8 @@ class AppleTracker {
     
     if (this.browser) {
       await this.browser.close();
+      this.browser = null;
+      this.browserInitPromise = null;
     }
   }
 }
