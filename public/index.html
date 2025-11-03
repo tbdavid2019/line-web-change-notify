@@ -250,6 +250,8 @@
                 this.currentUser = null;
                 this.liffId = null;
                 this.isLiffReady = false;
+                this.isGuestMode = false;
+                this.configLoaded = false;
                 this.productSpecs = {
                     'MacBook Air': {
                         chips: ['M2', 'M3', 'M4'],
@@ -299,10 +301,17 @@
                 if (!this.currentUser) {
                     await this.initLiff();
                     if (this.isLiffReady && this.currentUser) {
-                        await this.loadUserConfig();
+                        if (!this.configLoaded) {
+                            await this.loadUserConfig();
+                        }
                     } else {
                         await this.checkLoginOptions();
-                        return;
+                        if (!this.currentUser) {
+                            return;
+                        }
+                        if (!this.configLoaded) {
+                            await this.loadUserConfig();
+                        }
                     }
                 }
                 
@@ -326,10 +335,12 @@
 
                 if (isInLineApp && liffConfig.liffId) {
                     this.showLiffPrompt();
+                    return;
                 } else if (lineLoginConfig.channelId) {
                     this.showLineLoginOption();
+                    return;
                 } else {
-                    this.showNoLoginConfig();
+                    this.enableGuestMode();
                 }
             }
 
@@ -445,6 +456,36 @@
                 `;
             }
 
+            enableGuestMode() {
+                this.isGuestMode = true;
+                this.isLiffReady = true;
+                this.currentUser = {
+                    userId: 'guest',
+                    displayName: '訪客模式',
+                    pictureUrl: null,
+                    isGuest: true
+                };
+                this.showGuestModeBanner();
+            }
+
+            showGuestModeBanner() {
+                if (document.getElementById('guestModeBanner')) {
+                    return;
+                }
+
+                const banner = document.createElement('div');
+                banner.id = 'guestModeBanner';
+                banner.className = 'bg-amber-100 border-b border-amber-200';
+                banner.innerHTML = `
+                    <div class="max-w-6xl mx-auto px-4 py-3 text-sm text-amber-900 flex items-center space-x-2">
+                        <span>⚠️</span>
+                        <span>目前以訪客模式使用，設定與追蹤資料僅暫存於伺服器記憶體，重新部署或重啟後會重置。</span>
+                    </div>
+                `;
+
+                document.body.prepend(banner);
+            }
+
             async initLiff() {
                 try {
                     const response = await fetch('/api/liff-config');
@@ -496,10 +537,12 @@
                 try {
                     const response = await fetch(`/api/users/${this.currentUser.userId}/config`);
                     this.config = await response.json();
+                    this.configLoaded = true;
                     this.updateSummaryUI();
                 } catch (error) {
                     console.error('載入用戶配置失敗:', error);
                     this.config = { trackingRules: [] };
+                    this.configLoaded = true;
                 }
             }
 
@@ -666,9 +709,15 @@
                 if (statusBar) {
                     const userInfo = document.createElement('div');
                     userInfo.className = 'flex items-center space-x-2 text-sm user-info';
+                    const displayName = this.currentUser.displayName || '訪客使用者';
+                    const nameLabel = this.isGuestMode ? `${displayName}（訪客模式）` : displayName;
+                    const avatarInitial = displayName.charAt(0) || '訪';
+                    const avatarHtml = this.currentUser.pictureUrl
+                        ? `<img src="${this.currentUser.pictureUrl}" alt="用戶頭像" class="w-6 h-6 rounded-full">`
+                        : `<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600">${avatarInitial}</div>`;
                     userInfo.innerHTML = `
-                        <img src="${this.currentUser.pictureUrl}" alt="用戶頭像" class="w-6 h-6 rounded-full">
-                        <span class="text-gray-600">歡迎，${this.currentUser.displayName}</span>
+                        ${avatarHtml}
+                        <span class="text-gray-600">歡迎，${nameLabel}</span>
                     `;
                     statusBar.appendChild(userInfo);
                 }

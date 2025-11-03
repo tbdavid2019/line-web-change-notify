@@ -70,6 +70,8 @@ WEB_URL=https://你的網域
 3. 設定 LIFF 應用
 4. 取得必要的 Token 和 ID
 
+> 💡 若暫時沒有設定 LINE Login 或 LIFF，系統會以「訪客模式」運作，設定資料只會暫存於伺服器記憶體，重新部署或重啟後需重新設定。
+
 ### 5. 設定 Firebase（選用）
 
 詳細步驟請參考 [FIREBASE_SETUP.md](docs/FIREBASE_SETUP.md)：
