@@ -52,19 +52,18 @@ Vercel 以 Serverless Functions 執行 Node.js。**若沒有完成下列調整�
      ```
    - 以上程式碼重複使用同一個 `AppleTracker` 實例，避免每次請求都重新啟動 Puppeteer。
 
-3. **設定 Vercel 函式參數**（可選）
+3. **設定 Vercel 函式參數與路由**（可選）
    - 在專案根目錄新增 `vercel.json`：
      ```json
      {
        "functions": {
          "api/index.js": {
-           "runtime": "nodejs18.x",
            "memory": 1024,
            "maxDuration": 60
          }
        },
-       "routes": [
-         { "src": "/(.*)", "dest": "api/index.js" }
+       "rewrites": [
+         { "source": "/(.*)", "destination": "/api/index.js" }
        ]
      }
      ```
