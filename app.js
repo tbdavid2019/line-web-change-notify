@@ -19,6 +19,8 @@ class AppleTracker {
     this.firebaseService = new FirebaseService();
     this.notificationManager = new NotificationManager();
     this.scraperManager = null; // 將在 loadConfig 後初始化
+    this.initPromise = null;
+    this.initialized = false;
 
     this.setupServer();
   }
@@ -409,55 +411,76 @@ class AppleTracker {
   }
 
   async init() {
-    await this.loadConfig();
+    if (this.initialized) {
+      return this.app;
+    }
 
-    const firebaseReady = await this.firebaseService.initialize();
+    if (this.initPromise) {
+      return this.initPromise;
+    }
 
-    await this.notificationManager.initialize({
-      line: this.config.lineConfig,
-      email: this.config.emailConfig || { enabled: false },
-    });
+    this.initPromise = (async () => {
+      await this.loadConfig();
 
-    this.browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      protocolTimeout: 120000, // 2 minutes timeout
-    });
+      const firebaseReady = await this.firebaseService.initialize();
 
-    // 初始化爬蟲管理器
-    this.scraperManager = new ScraperManager({
-      browser: this.browser,
-      config: this.config.scrapers || {}
-    });
-
-    console.log("🤖 爬蟲管理器已初始化");
-    console.log("📊 爬蟲統計:", this.scraperManager.getStats());
-
-    // 檢查並自動重啟追蹤
-    if (firebaseReady) {
-      const systemState = await this.firebaseService.getSystemState();
-      console.log("系統狀態檢查:", { 
-        savedState: systemState.isTracking, 
-        currentState: this.isTracking 
+      await this.notificationManager.initialize({
+        line: this.config.lineConfig,
+        email: this.config.emailConfig || { enabled: false },
       });
-      
-      if (systemState.isTracking && !this.isTracking) {
-        console.log("🔄 服務重啟，自動重新啟動追蹤");
-        await this.startTracking();
-      } else if (systemState.isTracking && this.isTracking) {
-        console.log("✅ 追蹤狀態已同步");
-      } else {
-        console.log("ℹ️ 系統未設定為追蹤模式");
-      }
-    }
 
-    console.log("服務已初始化");
-    if (!firebaseReady) {
-      console.log("Firebase未連接，部分功能可能無法使用");
-    }
-    
-    if (firebaseReady) {
-      this.startSummaryScheduler();
+      if (!this.browser) {
+        this.browser = await puppeteer.launch({
+          headless: true,
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+          protocolTimeout: 120000, // 2 minutes timeout
+        });
+      }
+
+      if (!this.scraperManager) {
+        this.scraperManager = new ScraperManager({
+          browser: this.browser,
+          config: this.config.scrapers || {},
+        });
+
+        console.log("🤖 爬蟲管理器已初始化");
+        console.log("📊 爬蟲統計:", this.scraperManager.getStats());
+      }
+
+      if (firebaseReady) {
+        const systemState = await this.firebaseService.getSystemState();
+        console.log("系統狀態檢查:", {
+          savedState: systemState.isTracking,
+          currentState: this.isTracking,
+        });
+
+        if (systemState.isTracking && !this.isTracking) {
+          console.log("🔄 服務重啟，自動重新啟動追蹤");
+          await this.startTracking();
+        } else if (systemState.isTracking && this.isTracking) {
+          console.log("✅ 追蹤狀態已同步");
+        } else {
+          console.log("ℹ️ 系統未設定為追蹤模式");
+        }
+      }
+
+      console.log("服務已初始化");
+      if (!firebaseReady) {
+        console.log("Firebase未連接，部分功能可能無法使用");
+      }
+
+      if (firebaseReady && !this.summaryInterval) {
+        this.startSummaryScheduler();
+      }
+
+      this.initialized = true;
+      return this.app;
+    })();
+
+    try {
+      return await this.initPromise;
+    } finally {
+      this.initPromise = null;
     }
   }
 
@@ -1128,6 +1151,10 @@ class AppleTracker {
     this.app.listen(this.port, () => {
       console.log(`🌐 伺服器啟動於 http://localhost:${this.port}`);
 
+      if (process.env.DISABLE_AUTO_OPEN === "true") {
+        return;
+      }
+
       const platform = process.platform;
       const command =
         platform === "darwin"
@@ -1418,13 +1445,23 @@ class AppleTracker {
   }
 }
 
-const tracker = new AppleTracker();
-tracker.start();
+if (require.main === module) {
+  const tracker = new AppleTracker();
+  tracker
+    .start()
+    .catch((error) => {
+      console.error("啟動服務時發生錯誤:", error);
+      process.exit(1);
+    });
 
-process.on("SIGINT", async () => {
-  console.log("\n正在關閉...");
-  await tracker.cleanup();
-  process.exit(0);
-});
+  const shutdown = async () => {
+    console.log("\n正在關閉...");
+    await tracker.cleanup();
+    process.exit(0);
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
 
 module.exports = AppleTracker;

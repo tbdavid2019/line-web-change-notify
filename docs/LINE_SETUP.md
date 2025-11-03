@@ -45,7 +45,7 @@
 ### LINE Login Channel ID
 1. 在你的 LINE Login Channel 設定頁面
 2. 點選 "Basic settings" tab  
-3. 複製 "Channel ID"
+3. 複製 "Channel ID".  // LINE_LOGIN_CHANNEL_ID
 
 ### LIFF ID
 1. 在 LINE Login Channel 的 "LIFF" tab中

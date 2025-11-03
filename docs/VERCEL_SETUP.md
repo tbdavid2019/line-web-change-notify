@@ -18,7 +18,7 @@
 4. 若需要 Firebase，先將服務帳戶 JSON 內容備份並移除實體檔案中的機敏資訊。
 
 ## 3. 調整程式碼以支援無伺服器環境
-Vercel 以 Serverless Functions 執行 Node.js。請依下列建議調整程式碼：
+Vercel 以 Serverless Functions 執行 Node.js。**若沒有完成下列調整，Vercel 只會部署出靜態網站，所有 `/api/*` 與 `/webhook/*` 路徑都會回傳 404。**
 
 1. **讓 `app.js` 在被匯入時不要自動監聽埠號**
    - 將檔尾的 `tracker.start()` 改為只在本地開發時啟動，例如：
@@ -71,14 +71,15 @@ Vercel 以 Serverless Functions 執行 Node.js。請依下列建議調整程式�
    - `memory` 與 `maxDuration` 需依方案調整，爬蟲建議至少 1024MB、60 秒。
 
 ## 4. Vercel 專案設定步驟
-1. 於 Vercel 後台選擇 **Add New… → Project**，連結儲存庫。
+1. 確認專案已包含上一節的 `app.js` 修改、`api/index.js` 與（選用）`vercel.json`。
+2. 於 Vercel 後台選擇 **Add New… → Project**，連結儲存庫。
 2. Build & Output Settings：
    - **Framework Preset**：`Other`。
    - **Install Command**：`npm install`（可保留預設）。
-   - **Build Command**：留空（Serverless 專案不需要 build）。
+   - **Build Command**：留空（代表這是 Serverless 專案，並非「不要部署」）。
    - **Output Directory**：留空。
 3. Environment → `+ Add` 新增下列環境變數（見下一節）。
-4. 保存設定後按 **Deploy**。
+4. 保存設定後按 **Deploy**，觀察日誌是否有顯示安裝依賴與初始化訊息（非只有靜態匯出）。
 
 ## 5. 必要環境變數
 下表列出程式碼中會讀取的環境變數。請於 Vercel → Project → Settings → Environment Variables 中設定，Production 與 Preview 環境可分別設定不同值。
@@ -103,13 +104,20 @@ Vercel 以 Serverless Functions 執行 Node.js。請依下列建議調整程式�
 > **貼心提醒**：Vercel 的環境變數支援 JSON 字串，貼上 `FIREBASE_SERVICE_ACCOUNT` 前可先執行 `cat firebase-service-account.json | tr -d '\n'` 或使用線上工具轉成單行 JSON。
 
 ## 6. 部署後驗證
-1. 查看部署日誌，確認 `✅ Firebase 已初始化`、`🤖 爬蟲管理器已初始化` 等訊息。
+1. 查看部署日誌，確認 `✅ Firebase 已初始化`、`🤖 爬蟲管理器已初始化` 等訊息；若只有「生成靜態資源」類訊息，表示 Serverless 函式尚未生效。
 2. 造訪 Vercel 產生的網址，檢查健康檢查端點：`https://your-app.vercel.app/health`。
-3. 更新 LINE Developers：
+3. 測試 webhook 端點（需使用 `POST`）：
+   ```bash
+   curl -X POST https://your-app.vercel.app/webhook/line \
+     -H "Content-Type: application/json" \
+     -d '{"events":[]}'
+   ```
+   預期回應為 `[]` 或你自訂的訊息。若直接以瀏覽器（GET）開啟會得到 404，屬於正常行為。
+4. 更新 LINE Developers：
    - Webhook URL → `https://your-app.vercel.app/webhook/line`
    - LIFF Endpoint → `https://your-app.vercel.app/`
    - LINE Login Callback → `https://your-app.vercel.app/auth/line/callback`
-4. 測試：向 LINE Bot 傳送「測試」或「新增規則」，確認通知與 LIFF 可用。
+5. 測試：向 LINE Bot 傳送「測試」或「新增規則」，確認通知與 LIFF 可用。
 
 ## 7. 進階設定（可選）
 - **排程任務**：可使用 [Vercel Cron Jobs](https://vercel.com/docs/cron-jobs) 定期呼叫自訂 API（例如建立 `/api/tasks/run-scraper` 以觸發爬蟲）。
