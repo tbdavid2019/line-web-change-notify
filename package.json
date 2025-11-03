@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@line/bot-sdk": "^10.2.0",
+    "@sparticuz/chromium": "latest",
     "axios": "^1.6.0",
     "chalk": "^4.1.2",
     "cheerio": "^1.0.0-rc.12",
@@ -19,7 +20,8 @@
     "firebase-admin": "^13.5.0",
     "inquirer": "^8.2.6",
     "nodemailer": "^6.9.0",
-    "puppeteer": "^24.9.0"
+    "puppeteer": "^24.9.0",
+    "puppeteer-core": "^24.9.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

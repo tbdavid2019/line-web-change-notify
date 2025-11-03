@@ -17,6 +17,7 @@
    - Callback URL: `http://localhost:3000/auth/line/callback` (本地開發)
    - 生產環境: `https://你的網域/auth/line/callback`
    - Scopes: profile, openid
+4. 切到「Basic settings」頁籤，記下 **LINE Login 的 Channel ID 與 Channel secret**（這組只能用在登入流程）
 
 ## 3. 建立 LIFF 應用（用於 LINE 應用內使用）
 
@@ -37,7 +38,7 @@
 3. 在 "Channel access token" 區域點選 "Issue"
 4. 複製產生的token
 
-### Channel Secret
+### Messaging API Channel Secret
 1. 在Messaging API Channel設定頁面的 "Basic settings" tab
 2. 找到 "Channel secret" 區域
 3. 複製Channel secret
@@ -46,6 +47,11 @@
 1. 在你的 LINE Login Channel 設定頁面
 2. 點選 "Basic settings" tab  
 3. 複製 "Channel ID".  // LINE_LOGIN_CHANNEL_ID
+
+### LINE Login Channel Secret
+1. 同樣在 LINE Login Channel 的 "Basic settings" tab
+2. 找到「Channel secret」欄位
+3. 複製並妥善儲存，部署時填入 `LINE_LOGIN_CHANNEL_SECRET`
 
 ### LIFF ID
 1. 在 LINE Login Channel 的 "LIFF" tab中
@@ -69,6 +75,7 @@ LINE_CHANNEL_SECRET=你的_CHANNEL_SECRET
 
 # LINE Login 設定（用於網頁登入）
 LINE_LOGIN_CHANNEL_ID=你的_LINE_LOGIN_CHANNEL_ID
+LINE_LOGIN_CHANNEL_SECRET=你的_LINE_LOGIN_CHANNEL_SECRET
 LINE_LOGIN_REDIRECT_URI=http://localhost:3000/auth/line/callback
 
 # LIFF 設定（用於 LINE 應用內使用）
@@ -77,6 +84,9 @@ LINE_LIFF_ID=1234567890-AbCdEfGh
 # 其他設定
 WEB_URL=https://你的網域
 ```
+
+> ℹ️ **不要混用兩個 Channel 的 Secret！**  
+> Messaging API 的 secret 只用於 Webhook 及推播；LINE Login 的 Channel ID/Secret 只用於 OAuth 換取 access token。若少了 `LINE_LOGIN_CHANNEL_SECRET`，程式會回退使用 `LINE_CHANNEL_SECRET`，這會導致 LINE Login 回傳 `invalid_client`。
 
 ### 自動取得User ID
 現在不需要手動取得User ID了！當使用者：

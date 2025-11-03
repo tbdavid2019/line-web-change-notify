@@ -65,9 +65,13 @@ Vercel 以 Serverless Functions 執行 Node.js。**若沒有完成下列調整�
        "rewrites": [
          { "source": "/(.*)", "destination": "/api/index.js" }
        ]
-     }
-     ```
+   }
+   ```
    - `memory` 與 `maxDuration` 需依方案調整，爬蟲建議至少 1024MB、60 秒。
+
+4. **使用輕量化 Chromium**
+   - Serverless 環境不會自動下載完整的 Chrome，本專案已整合 `@sparticuz/chromium` 與 `puppeteer-core`。
+   - 程式會在偵測到 Vercel/AWS 等環境時自動載入輕量化 Chrome，避免出現「Could not find Chrome」錯誤；在本地開發仍使用原本的 `puppeteer`。
 
 ## 4. Vercel 專案設定步驟
 1. 確認專案已包含上一節的 `app.js` 修改、`api/index.js` 與（選用）`vercel.json`。

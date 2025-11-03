@@ -1,12 +1,11 @@
 require("dotenv").config();
 const express = require("express");
-const puppeteer = require("puppeteer");
-const path = require("path");
 const { exec } = require("child_process");
 const line = require("@line/bot-sdk");
 const FirebaseService = require("./services/firebase");
 const NotificationManager = require("./services/notifications/NotificationManager");
 const ScraperManager = require("./src/managers/ScraperManager");
+const { getPuppeteerConfig } = require("./services/puppeteer");
 
 class AppleTracker {
   constructor() {
@@ -496,25 +495,20 @@ class AppleTracker {
     }
 
     console.log("🧠 初始化瀏覽器實例...");
-    this.browserInitPromise = puppeteer
-      .launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        protocolTimeout: 120000, // 2 minutes timeout
-      })
-      .then((browser) => {
-        this.browser = browser;
-        if (this.scraperManager) {
-          this.scraperManager.setBrowser(browser);
-        }
-        console.log("✅ 瀏覽器初始化完成");
-        return browser;
-      })
-      .catch((error) => {
-        this.browserInitPromise = null;
-        console.error("❌ 瀏覽器初始化失敗:", error);
-        throw error;
-      });
+    this.browserInitPromise = (async () => {
+      const { puppeteer, launchOptions } = await getPuppeteerConfig();
+      const browser = await puppeteer.launch(launchOptions);
+      this.browser = browser;
+      if (this.scraperManager) {
+        this.scraperManager.setBrowser(browser);
+      }
+      console.log("✅ 瀏覽器初始化完成");
+      return browser;
+    })().catch((error) => {
+      this.browserInitPromise = null;
+      console.error("❌ 瀏覽器初始化失敗:", error);
+      throw error;
+    });
 
     return this.browserInitPromise;
   }

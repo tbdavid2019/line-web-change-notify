@@ -48,6 +48,7 @@ LINE_CHANNEL_SECRET=你的_CHANNEL_SECRET
 
 # LINE Login 設定（用於網頁登入）
 LINE_LOGIN_CHANNEL_ID=你的_LINE_LOGIN_CHANNEL_ID
+LINE_LOGIN_CHANNEL_SECRET=你的_LINE_LOGIN_CHANNEL_SECRET
 LINE_LOGIN_REDIRECT_URI=https://你的網域/auth/line/callback
 
 # LIFF 設定（用於 LINE 應用內使用）
@@ -60,6 +61,12 @@ FIREBASE_SERVICE_ACCOUNT_KEY=./firebase-service-account.json
 PORT=3000
 WEB_URL=https://你的網域
 ```
+
+#### LINE Channel 變數對應
+
+- `LINE_CHANNEL_ACCESS_TOKEN`、`LINE_CHANNEL_SECRET`：對應 **Messaging API Channel**。這組用於 Webhook 驗證與推播訊息，仍需保留。
+- `LINE_LOGIN_CHANNEL_ID`、`LINE_LOGIN_CHANNEL_SECRET`、`LINE_LOGIN_REDIRECT_URI`：對應 **LINE Login Channel**。登入流程只接受這組 ID/Secret，請勿與 Messaging API 的 secret 混用。
+- `LINE_LIFF_ID`：在 LINE Login Channel 內建立的 LIFF 應用 ID，提供 LINE 內嵌網頁自動識別身份。
 
 ### 4. 設定 LINE Bot（必要）
 
@@ -139,6 +146,8 @@ npm start
 > - Enterprise：900 秒
 >
 > **適用場景**：輕量級爬蟲，適合監控網頁變化通知
+>
+> 📌 **注意**：在 Vercel、AWS Lambda 等無伺服器環境中，本專案會自動改用 `@sparticuz/chromium` + `puppeteer-core`。這組件內建輕量化的 Chrome，能避免「找不到 Chrome」的錯誤；本地開發則繼續沿用完整的 `puppeteer` 套件。
 
 ### Zeabur 部署
 
