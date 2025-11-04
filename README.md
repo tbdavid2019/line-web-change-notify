@@ -1,4 +1,5 @@
 # LINE 網頁變化通知器
+![alt text](image.png)
 
 ## 什麼是 LINE 網頁變化通知器？
 
