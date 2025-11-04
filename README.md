@@ -67,6 +67,16 @@ WEB_URL=https://你的網域
 - `LINE_CHANNEL_ACCESS_TOKEN`、`LINE_CHANNEL_SECRET`：對應 **Messaging API Channel**。這組用於 Webhook 驗證與推播訊息，仍需保留。
 - `LINE_LOGIN_CHANNEL_ID`、`LINE_LOGIN_CHANNEL_SECRET`、`LINE_LOGIN_REDIRECT_URI`：對應 **LINE Login Channel**。登入流程只接受這組 ID/Secret，請勿與 Messaging API 的 secret 混用。
 - `LINE_LIFF_ID`：在 LINE Login Channel 內建立的 LIFF 應用 ID，提供 LINE 內嵌網頁自動識別身份。
+- `APP_CONFIG_JSON`：可選，用來在部署環境覆寫 `config.json`（JSON 字串）。例如要在 Vercel 啟用 PChome 爬蟲，可將本機的 `config.json` 壓成單行後貼到此環境變數。
+  ```bash
+  jq -c '.' config.json | pbcopy   # macOS
+  # 或者
+  python3 - <<'PY'
+  import json, pathlib
+  print(json.dumps(json.loads(pathlib.Path("config.json").read_text())), end="")
+  PY | pbcopy
+  ```
+- `FIREBASE_SERVICE_ACCOUNT`：貼上 `firebase-service-account.json` 的單行版本，指令與上面相同（將檔名改成 `firebase-service-account.json`）。部署後程式會優先使用此環境變數，不需把 JSON 推到 Git。
 
 ### 4. 設定 LINE Bot（必要）
 

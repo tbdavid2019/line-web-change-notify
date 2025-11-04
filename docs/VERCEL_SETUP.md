@@ -72,6 +72,20 @@ Vercel 以 Serverless Functions 執行 Node.js。**若沒有完成下列調整�
 4. **使用輕量化 Chromium**
    - Serverless 環境不會自動下載完整的 Chrome，本專案已整合 `@sparticuz/chromium` 與 `puppeteer-core`。
    - 程式會在偵測到 Vercel/AWS 等環境時自動載入輕量化 Chrome，避免出現「Could not find Chrome」錯誤；在本地開發仍使用原本的 `puppeteer`。
+5. **（可選）透過環境變數提供設定檔**
+   - 如果不想把 `config.json` 推上 Git，可以在 Vercel 設定 `APP_CONFIG_JSON`，內容為整個 `config.json` 壓成單行後的 JSON 字串。
+     ```bash
+     # macOS：將 config.json 壓成單行並複製
+     jq -c '.' config.json | pbcopy
+
+     # 或使用 Python
+     python3 - <<'PY'
+     import json, pathlib
+     print(json.dumps(json.loads(pathlib.Path("config.json").read_text())), end="")
+     PY | pbcopy
+     ```
+   - 對 Firebase 服務帳戶可採用同樣方式，把 `firebase-service-account.json` 壓成單行後貼到 `FIREBASE_SERVICE_ACCOUNT`。
+   - 伺服器會依序套用「內建預設 → `config.json` → `APP_CONFIG_JSON` → 環境變數」，因此雲端可覆寫本機設定（例如啟用 PChome 爬蟲）。
 
 ## 4. Vercel 專案設定步驟
 1. 確認專案已包含上一節的 `app.js` 修改、`api/index.js` 與（選用）`vercel.json`。

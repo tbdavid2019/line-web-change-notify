@@ -15,14 +15,6 @@
       "pass": "your-app-password"
     }
   },
-  "schedule": {
-    "enabled": false,
-    "intervalMinutes": 30,
-    "quietHours": {
-      "start": "22:00",
-      "end": "08:00"
-    }
-  },
   "scrapers": {
     "apple": {
       "enabled": true,

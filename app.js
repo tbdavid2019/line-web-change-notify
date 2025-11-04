@@ -1,5 +1,7 @@
 require("dotenv").config();
 const express = require("express");
+const fs = require("fs");
+const path = require("path");
 const { exec } = require("child_process");
 const line = require("@line/bot-sdk");
 const FirebaseService = require("./services/firebase");
@@ -477,12 +479,81 @@ class AppleTracker {
   }
 
   async loadConfig() {
-    this.config = {
+    const defaultConfig = {
       lineConfig: {
-        channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || "",
-        channelSecret: process.env.LINE_CHANNEL_SECRET || "",
+        channelAccessToken: "",
+        channelSecret: "",
+      },
+      emailConfig: {
+        enabled: false,
+      },
+      scrapers: {
+        apple: {
+          enabled: true,
+          categories: ["mac", "ipad", "appletv"],
+        },
+        pchome: {
+          enabled: false,
+          categories: ["mac", "ipad"],
+        },
       },
     };
+
+    const loadJson = (source) => {
+      try {
+        return source ? JSON.parse(source) : null;
+      } catch (error) {
+        console.error("❌ 解析設定錯誤:", error.message);
+        return null;
+      }
+    };
+
+    const mergeDeep = (target, source) => {
+      if (!source || typeof source !== "object") {
+        return target;
+      }
+
+      for (const key of Object.keys(source)) {
+        const value = source[key];
+        if (
+          Array.isArray(value) ||
+          value === null ||
+          typeof value !== "object"
+        ) {
+          target[key] = value;
+        } else {
+          if (!target[key] || typeof target[key] !== "object") {
+            target[key] = {};
+          }
+          mergeDeep(target[key], value);
+        }
+      }
+      return target;
+    };
+
+    const envConfig = loadJson(process.env.APP_CONFIG_JSON);
+
+    let fileConfig = null;
+    const configPath = path.resolve(__dirname, "config.json");
+    if (fs.existsSync(configPath)) {
+      fileConfig = loadJson(fs.readFileSync(configPath, "utf8"));
+    }
+
+    let finalConfig = mergeDeep({}, defaultConfig);
+    finalConfig = mergeDeep(finalConfig, fileConfig);
+    finalConfig = mergeDeep(finalConfig, envConfig);
+
+    // Always override line credentials with environment variables when present
+    finalConfig.lineConfig.channelAccessToken =
+      process.env.LINE_CHANNEL_ACCESS_TOKEN ||
+      finalConfig.lineConfig.channelAccessToken ||
+      "";
+    finalConfig.lineConfig.channelSecret =
+      process.env.LINE_CHANNEL_SECRET ||
+      finalConfig.lineConfig.channelSecret ||
+      "";
+
+    this.config = finalConfig;
   }
 
   async ensureBrowser() {
