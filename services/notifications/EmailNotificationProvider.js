@@ -14,7 +14,7 @@ class EmailNotificationProvider extends NotificationProvider {
         throw new Error(`Email配置無效: ${validation.errors.join(', ')}`);
       }
 
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: config.smtp.host,
         port: config.smtp.port,
         secure: config.smtp.secure || false,
